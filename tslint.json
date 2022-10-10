@@ -1,0 +1,11 @@
+{
+    "compileOnSave": true,
+    "defaultSeverity": "error",
+    "extends": ["tslint:latest"],
+    "jsRules": {},
+    "rules": {
+        "no-console": false
+    },
+    "rulesDirectory": [],
+    "variable-name": [true, "ban-keywords", "check-format", "allow-pascal-case"]
+}

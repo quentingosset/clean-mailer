@@ -1,0 +1,12 @@
+{
+  "environment": "development",
+  "aad_endpoint":"https://login.microsoftonline.com/",
+  "graph_endpoint":"https://graph.microsoft.com/",
+  "tenant_id":"common",
+  "scope": [
+    "user.read",
+    "mail.read",
+    "mail.send",
+    "offline_access"
+  ]
+}
