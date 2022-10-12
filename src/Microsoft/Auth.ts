@@ -1,7 +1,9 @@
-import {AuthenticationResult, PublicClientApplication} from '@azure/msal-node';
+import {PublicClientApplication} from '@azure/msal-node';
 import * as dotenv from 'dotenv';
 import {cachePlugin} from './CachePlugin';
 import config from '../../src/config.json';
+import {Client} from "@microsoft/microsoft-graph-client";
+import "isomorphic-fetch";
 
 dotenv.config();
 
@@ -17,47 +19,51 @@ export class Auth {
             cachePlugin: cachePlugin("./data/cache.json")
         }
     };
+
+
     private cca = new PublicClientApplication(this.msalConfig);
 
-    async getAuthentication(): Promise<AuthenticationResult> {
-
-        const msalTokenCache = this.cca.getTokenCache();
-        let authenticationResult;
-
-        const accounts = await msalTokenCache.getAllAccounts();
-        // Acquire Token Silently if an account is present
-        if (accounts.length > 0) {
-            const silentRequest = {
-                account: accounts[0], // Index must match the account that is trying to acquire token silently
-                scopes: config.scope,
-            };
-            await this.cca.acquireTokenSilent(silentRequest).then((response) => {
-                    authenticationResult = response;
-                    console.clear();
-                    console.log("Successful Silent token acquisition");
-                }).catch((error) => {
-                    console.clear();
-                    console.log(error, error.errorMessage);
-                    return process.exit(1);
-                });
-        } else { // fall back to username password if there is no account
-            await this.cca.acquireTokenByDeviceCode({
-                scopes: config.scope,
-                deviceCodeCallback: response => {
-                    console.clear();
-                    console.log(`${response.message}`);
+    // TODO
+    // il faudra faire un check si des permissions on changer si oui alors on redemande l'autorisation
+    getAuthenticatedClient(userId: string): Client {
+        // Initialize Graph client
+        return Client.init({
+            // Implement an auth provider that gets a token
+            // from the app's MSAL instance
+            authProvider: async (done) => {
+                try {
+                    // Get the user's account
+                    const account = await this.cca
+                        .getTokenCache()
+                        .getAccountByHomeId(userId);
+                    if (account) {
+                        // Attempt to get the token silently
+                        // This method uses the token cache and
+                        // refreshes expired tokens as needed
+                        const result = await this.cca.acquireTokenSilent({
+                            scopes: config.scope,
+                            account
+                        });
+                        // First param to callback is the error,
+                        // Set to null in success case
+                        done(null, result.accessToken);
+                    } else {
+                        const result = await this.cca.acquireTokenByDeviceCode({
+                            scopes: config.scope,
+                            deviceCodeCallback: response => {
+                                console.clear();
+                                console.log(`${response.message}`);
+                            }
+                        });
+                        console.clear();
+                        console.log("ok success code");
+                        done(null, result.accessToken);
+                    }
+                } catch (err) {
+                    console.log(JSON.stringify(err, Object.getOwnPropertyNames(err)));
+                    done(err, null);
                 }
-            }).then((response: AuthenticationResult) => {
-                authenticationResult = response;
-                console.clear();
-                console.log("Successful Client token acquisition")
-            }).catch((error) => {
-                console.clear();
-                console.log(error.errorMessage);
-                return process.exit(1);
-            });
-        }
-
-        return authenticationResult;
+            }
+        });
     }
 }
