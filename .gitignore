@@ -3,4 +3,4 @@
 .idea
 /dist
 package-lock.json
-/data/cache.json
+/assets/cache/cache.json

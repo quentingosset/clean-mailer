@@ -1,0 +1,4 @@
+
+interface IRequest {
+    mail: string;
+}

@@ -1,7 +1,7 @@
 import {PublicClientApplication} from '@azure/msal-node';
 import * as dotenv from 'dotenv';
 import {cachePlugin} from './CachePlugin';
-import config from '../../src/config.json';
+import config from '../../Config/microsoft.json';
 import {Client} from "@microsoft/microsoft-graph-client";
 import "isomorphic-fetch";
 
@@ -16,7 +16,7 @@ export class Auth {
             clientSecret: process.env.CLIENT_SECRET,
         },
         cache: {
-            cachePlugin: cachePlugin("./data/cache.json")
+            cachePlugin: cachePlugin("./assets/cache/cache.json")
         }
     };
 
@@ -55,8 +55,6 @@ export class Auth {
                                 console.log(`${response.message}`);
                             }
                         });
-                        console.clear();
-                        console.log("ok success code");
                         done(null, result.accessToken);
                     }
                 } catch (err) {
